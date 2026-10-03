@@ -39,7 +39,7 @@ jobs:
           sbom: false
       - name: Send image provenance to Grafana
         uses: grafana/hackathon-18-sdlc-github-action@9208e7efd567bc32094d964513e4a0d2298a3214
-        if: ${{ success() && steps.build.outputs.digest != '' }}
+        if: ${{ success() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.build.outputs.digest != '' }}
         with:
           image: ghcr.io/grafana-sdlc/sdlc-demo-api
           digest: ${{ steps.build.outputs.digest }}
