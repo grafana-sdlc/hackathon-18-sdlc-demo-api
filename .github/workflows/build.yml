@@ -13,6 +13,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -35,6 +37,13 @@ jobs:
           # The SDLC App's suggested PR adds provenance reporting for the demo.
           provenance: false
           sbom: false
+      - name: Send image provenance to Grafana
+        uses: grafana/hackathon-18-sdlc-github-action@9208e7efd567bc32094d964513e4a0d2298a3214
+        if: ${{ success() && steps.build.outputs.digest != '' }}
+        with:
+          image: ghcr.io/grafana-sdlc/sdlc-demo-api
+          digest: ${{ steps.build.outputs.digest }}
+          gateway-url: https://sdlc-github.grafana-dev.net
       - name: Save immutable deployment reference
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
