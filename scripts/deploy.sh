@@ -37,9 +37,25 @@ if [[ "$phase" == updated && ( -z "$existing" || "$existing" == "$image" ) ]]; t
 fi
 python3 "$root/scripts/render.py" "$namespace" "$image" "$sha" > "$scratch/resources.json"
 echo "Deploying $image to $context / $namespace"
-python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1]))["items"][0]))' "$scratch/resources.json" | "${k[@]}" apply -f -
-"${k[@]}" apply --dry-run=server -f "$scratch/resources.json" >/dev/null
-"${k[@]}" apply -f "$scratch/resources.json"
+if [[ "$phase" == updated ]]; then
+ # Only change the image and source revision; preserve resource-demo settings.
+ python3 - "$scratch/resources.json" > "$scratch/image-patch.json" <<'PATCH'
+import json, sys
+items = json.load(open(sys.argv[1]))['items']
+template = next(x for x in items if x['kind'] == 'Deployment')['spec']['template']
+container = template['spec']['containers'][0]
+print(json.dumps({'spec': {'template': {
+    'metadata': {'annotations': template['metadata']['annotations']},
+    'spec': {'containers': [{'name': container['name'], 'image': container['image']}]}
+}}}))
+PATCH
+ "${k[@]}" patch deployment/sdlc-demo-api --type=strategic --patch-file "$scratch/image-patch.json" --dry-run=server >/dev/null
+ "${k[@]}" patch deployment/sdlc-demo-api --type=strategic --patch-file "$scratch/image-patch.json"
+else
+ python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1]))["items"][0]))' "$scratch/resources.json" | "${k[@]}" apply -f -
+ "${k[@]}" apply --dry-run=server -f "$scratch/resources.json" >/dev/null
+ "${k[@]}" apply -f "$scratch/resources.json"
+fi
 "${k[@]}" rollout status deployment/sdlc-demo-api --timeout=180s
 "${k[@]}" get pods -l app.kubernetes.io/name=sdlc-demo-api -o wide
 echo "Filter the SDLC App by deployment name: sdlc-demo-api"
