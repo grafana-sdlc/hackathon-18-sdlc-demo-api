@@ -35,7 +35,7 @@ func main() {
 		shutdown, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdown); err != nil {
-			log.Printf("shutdown: %v", err)
+			log.Printf("shutdown demo-api: %v", err)
 		}
 	}()
 	log.Printf("sdlc-demo-api revision=%s listening on :8080", revision)
