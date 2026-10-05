@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (($#)); then
+  echo 'Usage: ./scripts/psql' >&2
+  echo 'Opens an admin psql session to sdlc_events in dev-us-east-0. Exit with \q.' >&2
+  exit 2
+fi
+
+# Credentials stay inside the temporary pod; no SQL is executed automatically.
+pod="sdlc-events-psql-$(date +%s)-$$"
+overrides=$(cat <<'JSON'
+{
+  "spec": {
+    "automountServiceAccountToken": false,
+    "containers": [{
+      "name": "psql",
+      "image": "postgres:17.6-alpine",
+      "stdin": true,
+      "tty": true,
+      "envFrom": [{
+        "secretRef": {"name": "sdlc-events-db-credentials"}
+      }],
+      "command": [
+        "sh", "-c",
+        "export PGPASSWORD=\"$password\" PGSSLMODE=require PGCONNECT_TIMEOUT=15; exec psql -X -h \"$endpoint\" -p \"$port\" -U \"$username\" -d sdlc_events"
+      ]
+    }]
+  }
+}
+JSON
+)
+exec kubectl --context dev-us-east-0 -n sdlc-o11y run "$pod" \
+  --rm -it --restart=Never \
+  --image=postgres:17.6-alpine \
+  --overrides="$overrides"
