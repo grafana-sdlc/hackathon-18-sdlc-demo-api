@@ -14,5 +14,5 @@ for item in resources['items']:
     item['metadata']['namespace'] = namespace
     if item['kind'] == 'Deployment':
         item['spec']['template']['spec']['containers'][0]['image'] = image
-        item['spec']['template']['metadata']['annotations']['demo.sdlc.dev/revision'] = sha
+        item['metadata'].setdefault('annotations', {})['demo.sdlc.dev/revision'] = sha
 print(json.dumps(resources, indent=2))

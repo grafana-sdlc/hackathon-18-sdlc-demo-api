@@ -32,9 +32,7 @@
               "app.kubernetes.io/name": "sdlc-demo-api",
               "app.kubernetes.io/part-of": "sdlc-demo"
             },
-            "annotations": {
-              "demo.sdlc.dev/revision": "COMMIT_SHA"
-            }
+            "annotations": {}
           },
           "spec": {
             "automountServiceAccountToken": false,

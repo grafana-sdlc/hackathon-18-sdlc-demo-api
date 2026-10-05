@@ -43,10 +43,10 @@ if [[ "$phase" == updated ]]; then
  python3 - "$scratch/resources.json" > "$scratch/image-patch.json" <<'PATCH'
 import json, sys
 items = json.load(open(sys.argv[1]))['items']
-template = next(x for x in items if x['kind'] == 'Deployment')['spec']['template']
+deployment = next(x for x in items if x['kind'] == 'Deployment')
+template = deployment['spec']['template']
 container = template['spec']['containers'][0]
-print(json.dumps({'spec': {'template': {
-    'metadata': {'annotations': template['metadata']['annotations']},
+print(json.dumps({'metadata': {'annotations': {'demo.sdlc.dev/revision': deployment['metadata']['annotations']['demo.sdlc.dev/revision']}}, 'spec': {'template': {
     'spec': {'containers': [{'name': container['name'], 'image': container['image']}]}
 }}}))
 PATCH
