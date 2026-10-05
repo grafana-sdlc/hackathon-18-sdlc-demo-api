@@ -2,7 +2,7 @@
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 context=${KUBE_CONTEXT:-dev-us-east-0}
-namespace=${DEMO_NAMESPACE:-sdlc-demo-api}
+namespace=${DEMO_NAMESPACE:-sdlc-o11y}
 k=(kubectl --context "$context" --namespace "$namespace" --request-timeout=30s)
 command=${1:-help}
 if (($#)); then shift; fi
@@ -18,13 +18,14 @@ Usage: scripts/demo.sh COMMAND
   reset-resources         Restore baseline 10m/100m CPU and 16Mi/64Mi memory
   image [commit-SHA]      Deploy a different main build; preserve current CPU/memory
   undo                    Roll back one retained Kubernetes revision
-  keep                    Disable Flux reconciliation on the three demo resources
+  keep                    Disable Flux reconciliation on the demo Deployment and Service
   remove-annotations      Remove the three temporary Flux keys from demo resources
   cleanup                 Delete only the labeled demo Deployment and Service
 
-Defaults: KUBE_CONTEXT=dev-us-east-0, DEMO_NAMESPACE=sdlc-demo-api.
+Defaults: KUBE_CONTEXT=dev-us-east-0, DEMO_NAMESPACE=sdlc-o11y.
 Initial/image fetch the immutable digest from a successful main-build artifact.
 Merge the provenance PR yourself, then run image with its full merge SHA.
+The target namespace must already exist and is never modified.
 The demo is manually managed: removing annotations does NOT delete its resources.
 Cleanup leaves the namespace and database event/provenance history intact.
 For a fresh rollout: cleanup, then initial with an appropriate baseline commit.
@@ -40,10 +41,7 @@ esac
 (($# == 0)) || { echo 'Unexpected arguments.' >&2; exit 2; }
 for tool in kubectl python3; do command -v "$tool" >/dev/null; done
 resources=(deployment/sdlc-demo-api service/sdlc-demo-api)
-if [[ "$command" == keep || "$command" == remove-annotations ]]; then
- resources+=("namespace/$namespace")
-fi
-# Check all targets before a mutation, including the namespace when annotating it.
+# Check only the demo Deployment and Service; never mutate the shared namespace.
 for resource in "${resources[@]}"; do
  object=$("${k[@]}" get "$resource" --ignore-not-found -o json)
  [[ -n "$object" ]] || continue

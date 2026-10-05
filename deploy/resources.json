@@ -3,22 +3,6 @@
   "kind": "List",
   "items": [
     {
-      "apiVersion": "v1",
-      "kind": "Namespace",
-      "metadata": {
-        "name": "sdlc-demo-api",
-        "labels": {
-          "app.kubernetes.io/name": "sdlc-demo-api",
-          "app.kubernetes.io/part-of": "sdlc-demo"
-        },
-        "annotations": {
-          "kustomize.toolkit.fluxcd.io/reconcile": "disabled",
-          "kustomize.toolkit.fluxcd.io/reconcile-disabled-by": "Lantero",
-          "kustomize.toolkit.fluxcd.io/reconcile-disabled-reason": "Temporary grafana-sdlc/sdlc-demo-api walkthrough; managed by scripts/demo.sh"
-        }
-      }
-    },
-    {
       "apiVersion": "apps/v1",
       "kind": "Deployment",
       "metadata": {
@@ -31,7 +15,8 @@
           "kustomize.toolkit.fluxcd.io/reconcile": "disabled",
           "kustomize.toolkit.fluxcd.io/reconcile-disabled-by": "Lantero",
           "kustomize.toolkit.fluxcd.io/reconcile-disabled-reason": "Temporary grafana-sdlc/sdlc-demo-api walkthrough; managed by scripts/demo.sh"
-        }
+        },
+        "namespace": "sdlc-o11y"
       },
       "spec": {
         "replicas": 1,
@@ -126,7 +111,8 @@
           "kustomize.toolkit.fluxcd.io/reconcile": "disabled",
           "kustomize.toolkit.fluxcd.io/reconcile-disabled-by": "Lantero",
           "kustomize.toolkit.fluxcd.io/reconcile-disabled-reason": "Temporary grafana-sdlc/sdlc-demo-api walkthrough; managed by scripts/demo.sh"
-        }
+        },
+        "namespace": "sdlc-o11y"
       },
       "spec": {
         "selector": {

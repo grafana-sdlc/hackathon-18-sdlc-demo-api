@@ -5,7 +5,7 @@ shift
 [[ "$phase" == initial || "$phase" == updated ]] || exit 2
 repo=grafana-sdlc/sdlc-demo-api
 context=${KUBE_CONTEXT:-dev-us-east-0}
-namespace=${DEMO_NAMESPACE:-sdlc-demo-api}
+namespace=${DEMO_NAMESPACE:-sdlc-o11y}
 root=$(cd "$(dirname "$0")/.." && pwd)
 for tool in gh kubectl python3; do command -v "$tool" >/dev/null || { echo "Missing: $tool" >&2; exit 1; }; done
 if [[ $# -gt 1 ]]; then echo 'Usage: script [full-commit-SHA]' >&2; exit 2; fi
@@ -28,6 +28,7 @@ print(record['image'] + '@' + record['digest'])
 PY
 )
 k=(kubectl --context "$context" --namespace "$namespace" --request-timeout=30s)
+"${k[@]}" get namespace "$namespace" -o name >/dev/null
 existing=$("${k[@]}" get deployment sdlc-demo-api --ignore-not-found -o jsonpath='{.spec.template.spec.containers[0].image}')
 if [[ "$phase" == initial && -n "$existing" && "$existing" != "$image" ]]; then
  echo 'A different image is already deployed; use Script 2.' >&2; exit 1
@@ -52,7 +53,6 @@ PATCH
  "${k[@]}" patch deployment/sdlc-demo-api --type=strategic --patch-file "$scratch/image-patch.json" --dry-run=server >/dev/null
  "${k[@]}" patch deployment/sdlc-demo-api --type=strategic --patch-file "$scratch/image-patch.json"
 else
- python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1]))["items"][0]))' "$scratch/resources.json" | "${k[@]}" apply -f -
  "${k[@]}" apply --dry-run=server -f "$scratch/resources.json" >/dev/null
  "${k[@]}" apply -f "$scratch/resources.json"
 fi

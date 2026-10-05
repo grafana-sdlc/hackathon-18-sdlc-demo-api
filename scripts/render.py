@@ -9,10 +9,9 @@ if not re.fullmatch(r'[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?', namespace):
     raise SystemExit('Invalid Kubernetes namespace')
 resources = json.loads((pathlib.Path(__file__).resolve().parents[1] / 'deploy/resources.json').read_text())
 for item in resources['items']:
-    if item['kind'] == 'Namespace':
-        item['metadata']['name'] = namespace
-    else:
-        item['metadata']['namespace'] = namespace
+    if item['kind'] not in ('Deployment', 'Service'):
+        raise SystemExit('Only demo Deployments and Services may be rendered')
+    item['metadata']['namespace'] = namespace
     if item['kind'] == 'Deployment':
         item['spec']['template']['spec']['containers'][0]['image'] = image
         item['spec']['template']['metadata']['annotations']['demo.sdlc.dev/revision'] = sha
